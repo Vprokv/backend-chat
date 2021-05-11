@@ -1,10 +1,10 @@
 import express from 'express'
-import {UserModel} from "../schemas";
+import {UserModels} from "../models";
 
 class UserController {
     show(req: express.Request, res: express.Response) {
         const id: string = req.params.id;
-        UserModel.findById(id, (err: any, user: any) => {
+        UserModels.findById(id, (err: any, user: any) => {
             if (err) {
                 return res.status(404).json({
                     message: "not found"
@@ -24,7 +24,7 @@ class UserController {
             fullname: req.body.fullname,
             password: req.body.password,
         };
-        const user = new UserModel(postData);
+        const user = new UserModels(postData);
         user
             .save()
             .then((obj: any) => {
@@ -37,7 +37,7 @@ class UserController {
 
     delete(req: express.Request, res: express.Response) {
         const id: string = req.params.id;
-        UserModel.findByIdAndRemove({_id: id})
+        UserModels.findByIdAndRemove({_id: id})
             .then(user => {
                 if(user) {
                     res.json({
