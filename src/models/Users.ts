@@ -7,9 +7,9 @@ export interface IUser extends Document{
     fullname: string;
     password: string;
     confirmed: boolean;
-    avatar: string;
-    confirm_hash: string,
-    last_seen: Date,
+    avatar?: string;
+    confirm_hash?: string,
+    last_seen?: Date,
 
 }
 
@@ -33,11 +33,16 @@ const UserSchema = new Schema({
         default: false
     },
     confirm_hash: String,
-    last_seen: Date,
-    avatar: String
+    avatar: String,
+    last_seen: {
+        type: Date,
+        default: new Date()
+    },
 }, {
     timestamps: true
 });
+
+
 
 const UserModels = mongoose.model<IUser>('User', UserSchema);
 
