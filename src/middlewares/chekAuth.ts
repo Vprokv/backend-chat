@@ -3,14 +3,13 @@ import {verifyJWTToken} from "../utils";
 import {IUser} from "../models/Users";
 
 
-
 export default (
     req: any,
     res: any,
     next: any
 ) => {
-    if (req.path !== '/user/login') {
-
+    if (req.path === "/user/login" || req.path === "/user/registration") {
+        return next();
     }
 
     const token = req.headers.token;

@@ -5,6 +5,7 @@ class DialogController {
 
     index(req: express.Request, res: express.Response,) {
         const authorId: any = "5d1ba4777a5a9a1264ba240c";
+        // const authorId= req.user._id;
 
         DialogModel.find({author: authorId})
             .populate(["author", "partner"])
