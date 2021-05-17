@@ -1,6 +1,5 @@
 import express from 'express'
 import {UserModels} from "../models";
-import {IUser} from "../models/Users";
 import {createJWTToken} from "../utils";
 import {validationResult} from "express-validator";
 
@@ -54,8 +53,16 @@ class UserController {
             });
     }
 
-    getMe() {
-
+    getMe(req: any, res: express.Response) {
+        const id: string = req.user._id;
+        UserModels.findById(id, (err: any, user: any) => {
+            if (err) {
+                return res.status(404).json({
+                    message: "not found"
+                });
+            }
+            res.json(user);
+        });
     };
 
     login(req: express.Request, res: express.Response) {

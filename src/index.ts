@@ -1,51 +1,29 @@
-import mongoose from 'mongoose'
 import express from 'express'
-import bodyParser from "body-parser";
 import dotenv from "dotenv";
 
-
-import {
-    UserController,
-    DialogController,
-    MessageController
-} from "./controllers";
-
-import {updateLastSeen, chekAuth} from './middlewares';
-import {loginValidation} from './utils/validations';
+import {createServer} from 'http'
+import "./core/db";
+import createRoutes from "./core/routes";
 
 const app = express();
+const http = createServer(app);
+const io = require("socket.io")(http)
+
 dotenv.config();
+createRoutes(app);
 
-app.use(bodyParser.json());
-app.use(updateLastSeen);
-app.use(chekAuth);
 
-const User = new UserController();
-const Dialog = new DialogController();
-const Messages = new MessageController();
 
-mongoose.connect('mongodb://localhost:27017/chat', {
-    useNewUrlParser: true,
-    useCreateIndex: true,
-    useUnifiedTopology: true,
-    useFindAndModify: true
+io.on('connection', function(socket:any) {
+    console.log('Connected');
+    socket.emit("111", 'dfdfsdfsdf');
+
+    socket.on("222", function(msg:any){
+        console.log("Client SAY:" + msg);
+    })
 
 });
 
-app.get("/user/:id", User.show);
-app.delete("/user/:id", User.delete);
-app.post("/user/registration", User.create);
-app.post("/user/login", loginValidation, User.login);
-
-app.get("/dialogs/", Dialog.index);
-app.delete("/dialogs/:id", Dialog.delete);
-app.post("/dialogs", Dialog.create);
-
-app.get("/messages", Messages.index);
-app.delete("/messages/:id", Messages.delete);
-app.post("/messages", Messages.create);
-
-
-app.listen(process.env.PORT, function () {
+http.listen(process.env.PORT, function () {
 console.log(`Server: http://localhost:${process.env.PORT}`);
 });
