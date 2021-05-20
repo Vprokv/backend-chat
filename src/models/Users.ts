@@ -52,7 +52,10 @@ UserSchema.pre('save', function(next) {
     generatePasswordHash(user.password)
         .then(hash => {
             user.password = String(hash);
-            next();
+            generatePasswordHash(""+Date.now()).then(confirmHash => {
+                user.confirm_hash = String(confirmHash);
+                next();
+            })
         })
         .catch(err => {
             next(err);

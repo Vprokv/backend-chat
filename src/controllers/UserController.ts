@@ -28,22 +28,7 @@ class UserController {
     };
 
 
-    create = (req: express.Request, res: express.Response) => {
-        const postData = {
-            email: req.body.email,
-            fullname: req.body.fullname,
-            password: req.body.password,
-        };
-        const user = new UserModels(postData);
-        user
-            .save()
-            .then((obj: any) => {
-                res.json(obj);
-            })
-            .catch(reason => {
-                res.json(reason)
-            });
-    };
+
 
     delete = (req: express.Request, res: express.Response) => {
         const id: string = req.params.id;
@@ -65,7 +50,7 @@ class UserController {
     getMe = (req: any, res: express.Response) => {
         const id: string = req.user._id;
         UserModels.findById(id, (err: any, user: any) => {
-            if (err) {
+            if (err || !user) {
                 return res.status(404).json({
                     message: "not found"
                 });
@@ -73,6 +58,53 @@ class UserController {
             res.json(user);
         });
     };
+
+    create = (req: express.Request, res: express.Response) => {
+        const postData = {
+            email: req.body.email,
+            fullname: req.body.fullname,
+            password: req.body.password
+        };
+
+        const errors = validationResult(req);
+
+        if (!errors.isEmpty()) {
+            return res.status(422).json({ errors: errors.array() });
+        }
+
+        const user = new UserModels(postData);
+
+        user
+            .save()
+            .then((obj: any) => {
+                res.json(obj);
+            })
+            .catch(reason => {
+                res.status(500).json({
+                    status: "error",
+                    message: reason
+                });
+            });
+    };
+
+    verify = (req: express.Request, res: express.Response) => {
+        const hash  = req.query.hash;
+        if (!hash) {
+            return res.status(422).json({errors: "Invalid hash"});
+        }
+        UserModels.findOne({confirm_hash: hash}, (err: any, user: any) => {
+            if (err || !user) {
+                return res.status(404).json({
+                    message: "Hash not found"
+                });
+            }
+            res.json({
+                status: "success",
+                message: "Аккаунт успешно подтвержден"
+            });
+        });
+
+    }
 
     login = (req: express.Request, res: express.Response) => {
         const postData = {
@@ -86,11 +118,10 @@ class UserController {
         }
 
 
-
         UserModels.findOne({
             email:postData.email
         }, (err:any, user:any) => {
-            if (err) {
+            if (err || !user) {
                 return res.status(404).json({
                     message: "User not found"
                 });

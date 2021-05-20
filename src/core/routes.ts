@@ -1,7 +1,7 @@
 import bodyParser from "body-parser";
 import {chekAuth, updateLastSeen} from "../middlewares";
 import {UserCtrl, DialogCtrl, MessageCtrl} from "../controllers";
-import {loginValidation} from "../utils/validations";
+import {loginValidation, RegisterValidation} from "../utils/validations";
 import express from "express";
 // @ts-ignore
 import socket from "socket.io";
@@ -19,10 +19,11 @@ const createRoutes =  (app: express.Express, io: socket.Server) =>{
 
 
     app.get("/user/me", UserController.getMe);
+    app.get("/user/verify", UserController.verify);
+    app.post("/user/signUp", RegisterValidation, UserController.create);
+    app.post("/user/signIn", loginValidation, UserController.login);
     app.get("/user/:id", UserController.show);
     app.delete("/user/:id", UserController.delete);
-    app.post("/user/registration", UserController.create);
-    app.post("/user/login", loginValidation, UserController.login);
 
     app.get("/dialogs/", DialogController.index);
     app.delete("/dialogs/:id", DialogController. delete);
