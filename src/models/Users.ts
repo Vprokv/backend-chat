@@ -6,7 +6,7 @@ import {generatePasswordHash} from "../utils";
 
 export interface IUser extends Document{
     email?: string;
-    fullname?: string;
+    fullName?: string;
     password?: string;
     confirmed?: boolean;
     avatar?: string;
@@ -22,7 +22,7 @@ const UserSchema = new Schema({
         validate: [validator.isEmail, 'Invalid email'],
         unique: true
     },
-    fullname: {
+    fullName: {
         type:String,
         required: 'Fullname is required',
     },

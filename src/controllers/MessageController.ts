@@ -1,5 +1,5 @@
 import express from 'express'
-import {MessageModel} from "../models";
+import {MessageModel, DialogModel} from "../models";
 
 // @ts-ignore
 import socket from 'socket.io';
@@ -46,6 +46,24 @@ class MessageController {
                             message: err
                         });
                     }
+
+
+
+                    DialogModel.findOneAndUpdate(
+                        {_id: postData.dialog},
+                        {lastMessage: message._id},
+                        {upsert: true},
+                        function (err) {
+                            if (err) {
+                                return res.status(500).json({
+                                    status: 'error',
+                                    message: err
+                                })
+                            }
+                            return res.send("succesfully saved");
+                        }
+                    )
+
                         res.json(message);
                         this.io.emit('SERVER:NEW_MESSAGE', message);
                     })

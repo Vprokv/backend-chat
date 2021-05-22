@@ -36,7 +36,7 @@ class UserController {
             .then(user => {
                 if(user) {
                     res.json({
-                        message: `User ${user.fullname} deleted`
+                        message: `User ${user.fullName} deleted`
                     });
                     }
                            })
@@ -62,12 +62,11 @@ class UserController {
     create = (req: express.Request, res: express.Response) => {
         const postData = {
             email: req.body.email,
-            fullname: req.body.fullname,
+            fullName: req.body.fullName,
             password: req.body.password
         };
 
         const errors = validationResult(req);
-
         if (!errors.isEmpty()) {
             return res.status(422).json({ errors: errors.array() });
         }
@@ -88,19 +87,30 @@ class UserController {
     };
 
     verify = (req: express.Request, res: express.Response) => {
-        const hash  = req.query.hash;
+        const hash  = String(req.query.hash);
         if (!hash) {
             return res.status(422).json({errors: "Invalid hash"});
         }
         UserModels.findOne({confirm_hash: hash}, (err: any, user: any) => {
             if (err || !user) {
                 return res.status(404).json({
+                    status: 'error',
                     message: "Hash not found"
                 });
             }
-            res.json({
-                status: "success",
-                message: "Аккаунт успешно подтвержден"
+            user.confirmed = true;
+
+            user.save((err: any) => {
+                if (err) {
+                    return res.status(404).json({
+                        status: 'error',
+                        message: err
+                    });
+                }
+                res.json({
+                    status: "success",
+                    message: "Аккаунт успешно подтвержден"
+                });
             });
         });
 
@@ -113,6 +123,8 @@ class UserController {
         };
 
         const errors = validationResult(req);
+
+
         if (!errors.isEmpty()) {
             return res.status(422).json({errors: errors.array()});
         }
@@ -129,11 +141,11 @@ class UserController {
             if (bcrypt.compareSync(postData.password, user.password)) {
                 const token = createJWTToken(user);
                 res.json({
-                    status: 'succes',
+                    status: 'success',
                     token
                 });
             } else {
-                res.json({
+                res.status(403).json({
                     status: 'error',
                     message: "Incorrect password or email"
                 });
