@@ -14,8 +14,9 @@ const createRoutes =  (app: express.Express, io: socket.Server) =>{
 
 
     app.use(bodyParser.json());
-    app.use(updateLastSeen);
     app.use(chekAuth);
+    app.use(updateLastSeen);
+
 
 
     app.get("/user/me", UserController.getMe);

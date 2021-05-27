@@ -28,31 +28,29 @@ class UserController {
     };
 
 
-
-
     delete = (req: express.Request, res: express.Response) => {
         const id: string = req.params.id;
         UserModels.findByIdAndRemove({_id: id})
             .then(user => {
-                if(user) {
+                if (user) {
                     res.json({
                         message: `User ${user.fullName} deleted`
                     });
-                    }
-                           })
+                }
+            })
             .catch(() => {
                 res.json({
                     message: "User not found"
                 });
             });
-    }
+    };
 
     getMe = (req: any, res: express.Response) => {
         const id: string = req.user._id;
         UserModels.findById(id, (err: any, user: any) => {
             if (err || !user) {
                 return res.status(404).json({
-                    message: "not found"
+                    message: "user not found"
                 });
             }
             res.json(user);
@@ -87,34 +85,36 @@ class UserController {
     };
 
     verify = (req: express.Request, res: express.Response) => {
-        const hash  = String(req.query.hash);
+        const hash = String(req.query.hash);
+
         if (!hash) {
-            return res.status(422).json({errors: "Invalid hash"});
+            return res.status(422).json({ errors: "Invalid hash" });
         }
-        UserModels.findOne({confirm_hash: hash}, (err: any, user: any) => {
+
+        UserModels.findOne({ confirm_hash: hash }, (err:any, user:any) => {
             if (err || !user) {
                 return res.status(404).json({
-                    status: 'error',
+                    status: "error",
                     message: "Hash not found"
                 });
             }
-            user.confirmed = true;
 
-            user.save((err: any) => {
+            user.confirmed = true;
+            user.save((err:any) => {
                 if (err) {
                     return res.status(404).json({
-                        status: 'error',
+                        status: "error",
                         message: err
                     });
                 }
+
                 res.json({
                     status: "success",
-                    message: "Аккаунт успешно подтвержден"
+                    message: "Аккаунт успешно подтвержден!"
                 });
             });
         });
-
-    }
+    };
 
     login = (req: express.Request, res: express.Response) => {
         const postData = {

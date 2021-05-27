@@ -12,11 +12,17 @@ class DialogController {
     }
 
     index = (req: any, res: express.Response) => {
-                const authorId= req.user._id;
+                const userId= req.user._id;
 
-        DialogModel.find({author: authorId})
-            .populate(["author", "partner", "lastMessage"])
-
+        DialogModel.find()
+            .or([{author: userId}, {partner: userId}])
+            .populate(["author", "partner"])
+            .populate({
+                path: "lastMessage",
+                populate: {
+                    path: "user"
+                }
+            })
             .exec(function (err, dialogs) {
             if (err) {
                 return res.status(404).json({
@@ -27,36 +33,42 @@ class DialogController {
         });
     }
 
-    create = (req: express.Request, res: express.Response) => {
-        const postData = {
-            author: req.body.author,
-            dialogId: req.body.partner
 
+    create = (req: any, res: express.Response) => {
+        const postData = {
+            author: req.user._id,
+            partner: req.body.partner
         };
+
         const dialog = new DialogModel(postData);
+
         dialog
             .save()
             .then((dialogObj: any) => {
                 const message = new MessageModel({
                     text: req.body.text,
                     user: req.body.author,
-                    dialog: dialogObj._id,
+                    dialog: dialogObj._id
                 });
 
                 message
                     .save()
                     .then(() => {
-                        res.json({
-                            dialog: dialogObj,
+                        dialogObj.lastMessage = message._id;
+                        dialogObj.save().then(() => {
+                            res.json(dialogObj);
+                            this.io.emit("SERVER:DIALOG_CREATED", {
+                                ...postData,
+                                dialog: dialogObj
+                            });
                         });
                     })
                     .catch(reason => {
-                    res.json(reason)
-                });
-
+                        res.json(reason);
+                    });
             })
             .catch(reason => {
-                res.json(reason)
+                res.json(reason);
             });
     };
 
