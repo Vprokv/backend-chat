@@ -23,6 +23,7 @@ const createRoutes =  (app: express.Express, io: socket.Server) =>{
     app.get("/user/verify", UserController.verify);
     app.post("/user/signUp", RegisterValidation, UserController.create);
     app.post("/user/signIn", loginValidation, UserController.login);
+    app.get("/user/find", UserController.findUsers);
     app.get("/user/:id", UserController.show);
     app.delete("/user/:id", UserController.delete);
 
@@ -31,8 +32,8 @@ const createRoutes =  (app: express.Express, io: socket.Server) =>{
     app.post("/dialogs", DialogController.create);
 
     app.get("/messages", MessageController.index);
-    app.delete("/messages/:id", MessageController.delete);
     app.post("/messages", MessageController.create);
+    app.delete("/messages/", MessageController.delete);
 }
 
 export default createRoutes;

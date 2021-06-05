@@ -47,7 +47,7 @@ class DialogController {
             .then((dialogObj: any) => {
                 const message = new MessageModel({
                     text: req.body.text,
-                    user: req.body.author,
+                    user: req.user._id,
                     dialog: dialogObj._id
                 });
 
@@ -78,13 +78,13 @@ class DialogController {
             .then(dialog => {
                 if(dialog) {
                     res.json({
-                        message: `Dialog deleted`
+                        message: "Dialog deleted"
                     });
                     }
                            })
             .catch(() => {
                 res.json({
-                    message: `Dialog not found`
+                    message: "Dialog not found"
                 });
             });
     }
