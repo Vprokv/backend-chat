@@ -5,12 +5,15 @@ import {loginValidation, RegisterValidation} from "../utils/validations";
 import express from "express";
 // @ts-ignore
 import socket from "socket.io";
+import Pool from "../core/postgreDB"
 
-const createRoutes =  (app: express.Express, io: socket.Server) =>{
+const  createRoutes =   (app: express.Express, io: socket.Server) =>{
     const UserController = new UserCtrl(io);
     const DialogController = new DialogCtrl(io);
     const MessageController = new MessageCtrl(io);
 
+    // const client = Pool.connect()
+    //  client.query('SELECT NOW()')
 
 
     app.use(bodyParser.json());

@@ -43,6 +43,7 @@ const UserSchema = new Schema({
     timestamps: true
 });
 
+
 UserSchema.virtual('isOnline').get(function (this:any) {
  return differenceInMinutes(new Date(), this.last_seen) < 5;
 })

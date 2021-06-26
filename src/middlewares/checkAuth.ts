@@ -6,8 +6,7 @@ import {verifyJWTToken} from "../utils";
 export default (req: any, res: any, next: any) => {
     if (
         req.path === "/user/signIn" ||
-        req.path === "/user/signUp" ||
-        req.path === "/user/verify"
+        req.path === "/user/signUp"
 
     ) {
         return next();
