@@ -76,18 +76,17 @@ class UserController {
 
     create = async (req: express.Request, res: express.Response) => {
         try {
-            const {email, fullName, password, avatar} = req.body
-        const newUser = await DB.query(
-            `INSERT INTO table_user (fullname, email, password, avatar) values ($1, $2, $3, $4) RETURNING *`,
-            [fullName, email, await generatePasswordHash(password), avatar])
-        res.json(newUser.rows[0])
-        } catch (e){
+            const {email, fullname, password, avatar} = req.body
+            const newUser = await DB.query(
+                    `INSERT INTO table_user (fullname, email, password, avatar) values ($1, $2, $3, $4) RETURNING *`,
+                [fullname, email, await generatePasswordHash(password), avatar])
+            res.json(newUser.rows[0])
+        } catch (e) {
             res.status(500).json({
                 status: "error",
                 message: e.message
             });
         }
-
     };
 
     verify = (req: express.Request, res: express.Response) => {
@@ -126,7 +125,6 @@ class UserController {
 
         try {
             const errors = validationResult(req);
-            console.log(errors.isEmpty(), errors)
             if (!errors.isEmpty()) {
                 return res.status(422).json({errors: errors.array()});
             }
@@ -135,7 +133,7 @@ class UserController {
             const {rows: [user]} = await DB.query(
                     `SELECT * FROM table_user where email=$1 and password=$2`,
                 [email, await generatePasswordHash(password)])
-            console.log(user)
+            console.log(user.rows)
             if (!user) {
                 return res.status(404).json({
                     message: "User not found"

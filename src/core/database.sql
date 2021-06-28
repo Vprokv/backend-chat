@@ -18,7 +18,7 @@ _id SERIAL  NOT NULL UNIQUE,
 text VARCHAR (1000) NOT NULL,
 createdAt TIMESTAMP NOT NULL,
 dialog_id INTEGER REFERENCES dialog (_id) NOT NULL,
-author_id INTEGER REFERENCES user (_id) NOT NULL,
+author_id INTEGER REFERENCES table_user (_id) NOT NULL,
 
 );
 

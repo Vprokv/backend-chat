@@ -1,8 +1,9 @@
 import express from 'express'
 import {MessageModel, DialogModel, UserModels} from "../models";
-
+import DB from "../core/postgreDB";
 // @ts-ignore
 import socket from 'socket.io';
+import {createJWTToken} from "../utils";
 
 class MessageController {
     io: socket.Server;
@@ -26,51 +27,44 @@ class MessageController {
         });
     }
 
-    create = (req: any, res: express.Response) => {
-        const userId:string = req.user._id;
+    create = async (req: any, res: express.Response) => {
 
-        const postData = {
-            text: req.body.text,
-            dialog: req.body.dialog,
-            user: userId
-        };
-
-        const message = new MessageModel(postData);
-
-        message
-            .save()
-            .then((obj: any) => {
-                obj.populate(["dialog", "user"], (err: any, message: any) => {
-                    if (err) {
-                        return res.status(500).json({
-                            status: "error",
-                            message: err
-                        });
-                    }
-
-                    DialogModel.findOneAndUpdate(
-                        { _id: postData.dialog },
-                        { lastMessage: message._id },
-                        { upsert: true },
-                        function(err) {
-                            if (err) {
-                                return res.status(500).json({
-                                    status: "error",
-                                    message: err
-                                });
-                            }
-                        }
-                    );
-
-                    res.json(message);
-
-                    this.io.emit("SERVER:NEW_MESSAGE", message);
-                });
-            })
-            .catch(reason => {
-                res.json(reason);``
+        try {
+            const {text, dialog_id, author_id, createdAt} = req.body
+            const newMessage = await DB.query(
+                    `INSERT INTO message(text, dialog_id, author_id, createdat) values ($1, $2, $3, $4) RETURNING *`,
+                [text, dialog_id, author_id, createdAt])
+            res.json(newMessage.rows[0])
+            this.io.emit("SERVER:NEW_MESSAGE", newMessage);
+        } catch (e) {
+            return res.status(500).json({
+                status: "error",
+                message: e.message
             });
-    };
+
+        }
+    }
+
+    getMessages = async (req: any, res: express.Response) => {
+        try {
+            const userId = req.user._id
+            const dialogId = req.dialog._id
+            const {rows: message} = await DB.query(`select * from message where user_id=$1 and dialog_id=$2`,
+                [userId, dialogId])
+            if (!message) {
+                return res.status(404).json({
+                    message: "message not found"
+                });
+            }
+            res.json(message)
+        } catch (e) {
+            res.status(500).json({
+                status: "error",
+                message: e.message
+            });
+        }
+    }
+
 
     delete = (req: any, res: express.Response): void => {
         const id: string = req.query.id;
