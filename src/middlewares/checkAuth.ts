@@ -16,7 +16,7 @@ export default (req: any, res: any, next: any) => {
 
     verifyJWTToken(token)
         .then((user: any) => {
-            req.user = user.data._doc;
+            req.user = user.data;
             next();
         })
         .catch(err => {

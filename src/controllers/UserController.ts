@@ -15,72 +15,42 @@ class UserController {
         this.io=io;
     }
 
-    show = (req: express.Request, res: express.Response) => {
-        const id: string = req.params.id;
-        UserModels.findById(id, (err: any, user: any) => {
-            if (err) {
-                return res.status(404).json({
-                    message: "not found"
-                });
-            }
-            res.json(user);
-        });
-    };
-
-
-    delete = (req: express.Request, res: express.Response) => {
-        // const id: string = req.params.id;
-        // UserModels.findByIdAndRemove({_id: id})
-            // .then(user => {
-            //     if (user) {
-            //         res.json({
-            //             message: `User ${user.fullName} deleted`
-            //         });
-            //     }
-            // })
-            // .catch(() => {
-            //     res.json({
-            //         message: "User not found"
-            //     });
-            // });
-    };
-
-    getMe = (req: any, res: express.Response) => {
-        const id: string = req.user._id;
-        UserModels.findById(id, (err: any, user: any) => {
-            if (err || !user) {
-                return res.status(404).json({
-                    message: "user not found"
-                });
-            }
-            res.json(user);
-        });
-    };
-
-    findUsers = (req: any, res: express.Response) => {
-        const query: string = req.query.query;
-        UserModels.find()
-            .or([
-                { fullName: new RegExp(query, "i") },
-                { email: new RegExp(query, "i") }
-            ])
-            .then((users: any) => res.json(users))
-            .catch((err: any) => {
-                return res.status(404).json({
-                    status: "error",
-                    message: err
-                });
-            });
-    };
-
-
     create = async (req: express.Request, res: express.Response) => {
         try {
             const {email, fullname, password, avatar} = req.body
-            const newUser = await DB.query(
-                    `INSERT INTO table_user (fullname, email, password, avatar) values ($1, $2, $3, $4) RETURNING *`,
+            const {rows: [newUser]} = await DB.query(
+                `INSERT INTO table_user (fullname, email, password, avatar) values ($1, $2, $3, $4) RETURNING *`,
                 [fullname, email, await generatePasswordHash(password), avatar])
-            res.json(newUser.rows[0])
+            res.json({
+                status: "success",
+                newUser
+            })
+        } catch (e) {
+            res.status(500).json({
+                status: "error",
+                message: e.message
+            });
+        }
+    };
+
+    login = async (req: express.Request, res: express.Response) => {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(422).json({errors: errors.array()});
+            }
+            const {email, password} = req.body
+            const {rows: [user]} = await DB.query(
+                `SELECT * FROM table_user where email=$1`, [email])
+            if (!user && await bcrypt.compare(password, user.password)) {
+                return res.status(404).json({
+                    message: "User not found"
+                });
+            }
+            res.json({
+                status: 'success',
+                token: createJWTToken(user)
+            })
         } catch (e) {
             res.status(500).json({
                 status: "error",
@@ -121,28 +91,48 @@ class UserController {
         });
     };
 
-    login = async (req: express.Request, res: express.Response) => {
-
+    getUserMeta = async (req: any, res: express.Response) => {
         try {
-            const errors = validationResult(req);
-            if (!errors.isEmpty()) {
-                return res.status(422).json({errors: errors.array()});
-            }
+            const {_id: user_id} = req.user
+            const {rows: userMeta}=await DB.query(
+                `select id_user, id_dialog, fullname from user_dialog, table_user where user_dialog.id_user=table_user._id and user_dialog.id_user!=$1 `,[user_id])
+            res.json(userMeta)
+        } catch (e) {
+            res.status(500).json({
+                status: "error",
+                message: e.message
+            });
+        }
+    }
 
-            const {email, password} = req.body
-            const {rows: [user]} = await DB.query(
-                    `SELECT * FROM table_user where email=$1 and password=$2`,
-                [email, await generatePasswordHash(password)])
-            console.log(user.rows)
+    // select id_user, id_dialog, fullname from user_dialog, table_user inner join table_user on user_dialog.id_user=table_user._id where user_dialog.id_user!=$1
+
+    getMe = async (req: any, res: express.Response) => {
+        try {
+            const {_id: user_id} = req.user
+            const {rows:[user]} = await DB.query(`select * from table_user where _id=$1`, [user_id])
             if (!user) {
                 return res.status(404).json({
-                    message: "User not found"
+                    message: "user not found"
                 });
             }
-            res.json({
-                status: 'success',
-                token: createJWTToken(user)
-            })
+            res.json(user);
+        } catch (e) {
+            res.status(500).json({
+                status: "error",
+                message: e.message
+            });
+        }
+    };
+
+    findUsers = async (req: any, res: express.Response) => {
+        try {
+            const {query} = req.query
+            const {rows:users} = await DB.query(
+                `SELECT * FROM table_user where fullname LIKE $1  or email LIKE $1`,
+                [query])
+
+            res.json(users)
         } catch (e) {
             res.status(500).json({
                 status: "error",
@@ -151,6 +141,7 @@ class UserController {
         }
 
     };
+
 }
 
 
