@@ -30,7 +30,7 @@ npm manifest:
   {
     "name": "chat-backend",
     "version": "1.0.0",
-    "main": "index.js",
+    "main": "index.ts",
     "license": "MIT",
     "scripts": {
       "start": "ts-node src/index.ts"

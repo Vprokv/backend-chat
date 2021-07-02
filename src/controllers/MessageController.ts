@@ -1,9 +1,7 @@
 import express from 'express'
-import {MessageModel, DialogModel, UserModels} from "../models";
 import DB from "../core/postgreDB";
 // @ts-ignore
 import socket from 'socket.io';
-import {createJWTToken} from "../utils";
 
 class MessageController {
     io: socket.Server;
@@ -21,7 +19,9 @@ class MessageController {
                     `INSERT INTO message(text, dialog_id, author_id, createdat) values ($1, $2, $3, $4) RETURNING *`,
                 [text, dialog_id, author_id, createdAt])
             res.json(newMessage)
-            this.io.emit("SERVER:NEW_MESSAGE", newMessage);
+            this.io.emit("SERVER:NEW_MESSAGE", {newMessage, dialog_id});
+            //вызов функции, которая выдаст все пользователей, участников диалогов, по id пользователя обращаюсь к сокету
+            // и отправляю сообщение пользователю по id
         } catch (e) {
             return res.status(500).json({
                 status: "error",
@@ -48,8 +48,10 @@ class MessageController {
         try {
             const message_id = req.params.id
             const {rows: [message]} = await DB.query(`DELETE FROM message where _id=$1`, [message_id])
+            const {dialog_id}=message
             res.status(200)
-            this.io.emit("SERVER:MESSAGE_DELETED", {message})
+            console.log(message_id)
+            this.io.emit("SERVER:MESSAGE_DELETED", {message_id, dialog_id})
         } catch (e) {
             res.status(500).json({
                 status: "error",
@@ -58,24 +60,7 @@ class MessageController {
         }
     }
 
-
-
-    index = (req: express.Request, res: express.Response) => {
-        const dialogId: any = req.query.dialog;
-
-        MessageModel.find({dialog: dialogId})
-            .populate(["dialog", "user"])
-            .exec(function (err, messages) {
-                if (err) {
-                    return res.status(404).json({
-                        message: "Messages not found"
-                    });
-                }
-                return res.json(messages);
-            });
-    }
 }
-
 
 
 export default MessageController ;

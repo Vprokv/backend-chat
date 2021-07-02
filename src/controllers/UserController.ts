@@ -1,5 +1,4 @@
 import express from 'express'
-import {UserModels} from "../models";
 import {createJWTToken} from "../utils";
 import {validationResult} from "express-validator";
 import DB from "../core/postgreDB";
@@ -59,37 +58,37 @@ class UserController {
         }
     };
 
-    verify = (req: express.Request, res: express.Response) => {
-        const hash = String(req.query.hash);
-
-        if (!hash) {
-            return res.status(422).json({ errors: "Invalid hash" });
-        }
-
-        UserModels.findOne({ confirm_hash: hash }, (err:any, user:any) => {
-            if (err || !user) {
-                return res.status(404).json({
-                    status: "error",
-                    message: "Hash not found"
-                });
-            }
-
-            user.confirmed = true;
-            user.save((err:any) => {
-                if (err) {
-                    return res.status(404).json({
-                        status: "error",
-                        message: err
-                    });
-                }
-
-                res.json({
-                    status: "success",
-                    message: "Аккаунт успешно подтвержден!"
-                });
-            });
-        });
-    };
+    // verify = (req: express.Request, res: express.Response) => {
+    //     const hash = String(req.query.hash);
+    //
+    //     if (!hash) {
+    //         return res.status(422).json({ errors: "Invalid hash" });
+    //     }
+    //
+    //     UserModels.findOne({ confirm_hash: hash }, (err:any, user:any) => {
+    //         if (err || !user) {
+    //             return res.status(404).json({
+    //                 status: "error",
+    //                 message: "Hash not found"
+    //             });
+    //         }
+    //
+    //         user.confirmed = true;
+    //         user.save((err:any) => {
+    //             if (err) {
+    //                 return res.status(404).json({
+    //                     status: "error",
+    //                     message: err
+    //                 });
+    //             }
+    //
+    //             res.json({
+    //                 status: "success",
+    //                 message: "Аккаунт успешно подтвержден!"
+    //             });
+    //         });
+    //     });
+    // };
 
     getUserMeta = async (req: any, res: express.Response) => {
         try {
@@ -128,10 +127,10 @@ class UserController {
     findUsers = async (req: any, res: express.Response) => {
         try {
             const {query} = req.query
+            const {_id: user_id} = req.user
             const {rows:users} = await DB.query(
-                `SELECT * FROM table_user where fullname LIKE $1  or email LIKE $1`,
-                [query])
-
+                `SELECT _id,fullname, email,avatar FROM (SELECT * from table_user where  _id <> $2) as A where fullname LIKE $1 or email  LIKE $1 `,
+                [query,user_id])
             res.json(users)
         } catch (e) {
             res.status(500).json({

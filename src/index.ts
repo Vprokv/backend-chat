@@ -2,7 +2,6 @@ import express from 'express'
 import dotenv from "dotenv";
 
 import {createServer} from 'http'
-import "./core/db";
 import createRoutes from "./core/routes";
 import createSocket from "./core/socket";
 
