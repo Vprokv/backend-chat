@@ -9,5 +9,6 @@ export default (token: string )=>
                 return reject(err);
             }
             resolve(decodedData);
+
         });
     });

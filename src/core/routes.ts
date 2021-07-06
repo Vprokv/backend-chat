@@ -15,15 +15,16 @@ const  createRoutes =   (app: express.Express, io: socket.Server) =>{
     app.use(chekAuth);
     // app.use(updateLastSeen);
 
+
     app.post("/user/signUp", RegisterValidation, UserController.create);
     app.post("/user/signIn", loginValidation, UserController.login);
-    // app.get("/user/verify", UserController.verify);
     app.get("/user/me", UserController.getMe);
     app.get("/user/find", UserController.findUsers);
     app.get("/user/meta", UserController.getUserMeta);
 
 
-    app.get("/dialogs/", DialogController.getDialog);
+    app.get("/dialogs", DialogController.getDialog);
+    app.get("/dialogs/meta", DialogController.getDialogsMeta);
     app.post("/dialogs", DialogController.createDialog);
     app.delete("/dialogs/:id", DialogController. removeDialogById);
 

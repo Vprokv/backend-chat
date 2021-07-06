@@ -1,11 +1,27 @@
 import http from "http"
 // @ts-ignore
 import socket from "socket.io"
-export default (http: http.Server) => {
+export const userMap = new Map([])
+import {verifyJWTToken} from "../utils";
+import express from "express";
+export default (http: any) => {
     const io = socket(http);
 
-    io.on('connection', function(socket: socket.Socket) {
-//cкладывать пользователей по id, отправлять только подключенному пользователю
-        })
-   return io;
+    io.on('connection', async function (socket: socket.Server) {
+        const {query} = socket.handshake
+        if (query && query.token) {
+            const {token} = query
+            const {data}: any = await verifyJWTToken(token)
+            const {_id: user_id} = data
+            if (data) {
+                userMap.set(user_id, socket.id)
+            }
+        }
+
+
+    })
+
+
+    return io;
 };
+
