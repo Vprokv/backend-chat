@@ -6,8 +6,8 @@ import bcrypt from 'bcrypt';
 
 import generatePasswordHash from "../utils/generatePasswordHash"
 import DB from "../core/postgreDB";
-import {createJWTToken, verifyJWTToken} from "../utils";
-import {userMap} from "../core/socket";
+import {createJWTToken} from "../utils";
+
 
 
 

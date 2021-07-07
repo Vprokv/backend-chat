@@ -1,9 +1,8 @@
-import http from "http"
+
 // @ts-ignore
 import socket from "socket.io"
 export const userMap = new Map([])
 import {verifyJWTToken} from "../utils";
-import express from "express";
 export default (http: any) => {
     const io = socket(http);
 

@@ -1,5 +1,5 @@
 import bodyParser from "body-parser";
-import {chekAuth, updateLastSeen} from "../middlewares";
+import {chekAuth} from "../middlewares";
 import {UserCtrl, DialogCtrl, MessageCtrl} from "../controllers/";
 import {loginValidation, RegisterValidation} from "../utils/validations";
 import express from "express";
@@ -13,7 +13,7 @@ const  createRoutes =   (app: express.Express, io: socket.Server) =>{
 
     app.use(bodyParser.json());
     app.use(chekAuth);
-    // app.use(updateLastSeen);
+
 
 
     app.post("/user/signUp", RegisterValidation, UserController.create);

@@ -40,7 +40,9 @@ as t2 on t1.dialog_id =t2.dialog_id and t1._id=t2.max_id_message)
 as t4 on t3._id = t4.author_id) as t5
 on t6._id_dialog=t5.dialog_id;`
                 , [user_id])
-            const dialogMetaObj = dialogMeta.reduce((acc: any, current: any, ) => {
+
+            // console.log(await DB.query(`SELECT id_user FROM user_dialog WHERE _id_dialog = ANY($1::int[]) group by _id_dialog`,[[193,194,195]]))
+            const dialogMetaObj = dialogMeta.reduce((acc: any, current: any ) => {
                 const key:any= current.dialog_id;
                 return {
                     ...acc,
@@ -59,12 +61,7 @@ on t6._id_dialog=t5.dialog_id;`
     addUserInDialog = async (user_id: any, {name, _id_dialog}: any, dbClient: any) => {
         await dbClient.query(
                 `INSERT INTO user_dialog (id_user, _id_dialog) values ($1, $2)`, [user_id, _id_dialog])
-        const {rows: usersInDialog} = await DB.query(`select id_user from user_dialog where _id_dialog=$1`, [_id_dialog])
-        usersInDialog.forEach((user: any) => {
-            this.io
-                .to(userMap.get(user.user_id))
-                .emit("SERVER:NEW_DIALOG", {name, _id_dialog});
-        })
+
     }
 
     createDialog = async (req: any, res: express.Response) => {
@@ -78,9 +75,38 @@ on t6._id_dialog=t5.dialog_id;`
                     `INSERT INTO dialog (name) values ($1) RETURNING *`, [name])
             await this.addUserInDialog(user_id, dialog, client)
             await this.addUserInDialog(partner_id, dialog, client)
-
             await client.query("COMMIT")
             res.json(dialog)
+            const {_id_dialog} = dialog
+
+            const {rows: usersInDialog} = await DB.query(
+                    `select id_user from user_dialog  where _id_dialog=$1`, [_id_dialog])
+            const {rows: [{fullname}]} = await DB.query(
+                    `select fullname from table_user where _id=$1`, [partner_id])
+
+            usersInDialog.forEach((user: any) => {
+                const userMeta = {
+                    _id_dialog: {
+                        _id_dialog: _id_dialog,
+                        id_user: partner_id,
+                        fullname: fullname
+                    }
+
+                }
+                if (userMap.has(user.id_user)) {
+                    this.io
+                        .to(userMap.get(user.id_user))
+                        .emit("SERVER:NEW_DIALOG", {_id_dialog, partner_id});
+                    // this.io
+                    //     .to(userMap.get(user.id_user))
+                    //     .emit("SERVER:NEW_USER_META", {
+                    //         _id_dialog: _id_dialog,
+                    //         id_user: partner_id,
+                    //         fullname: fullname
+                    //
+                    //     });
+                }
+            })
 
         } catch (e) {
             await client.query("ROLLBACK")
@@ -99,14 +125,16 @@ on t6._id_dialog=t5.dialog_id;`
             const {rows: usersInDialog} = await DB.query(`select id_user from user_dialog where _id_dialog=$1`, [dialog_id])
             await DB.query(
                     `DELETE FROM dialog dl using user_dialog ud where dl._id_dialog=ud._id_dialog and dl._id_dialog=$1`, [dialog_id])
-
             res.status(200)
             usersInDialog.forEach((user: any) => {
-                this.io
-                    .sockets
-                    .to(userMap.get(user.user_id))
-                    .emit("SERVER:DIALOG_DELETED", {dialog_id});
+                if (userMap.has(user.id_user)) {
+                    this.io
+                        .sockets
+                        .to(userMap.get(user.id_user))
+                        .emit("SERVER:DIALOG_DELETED", {dialog_id});
+                }
             })
+
         } catch (e) {
             res.status(500).json({
                 status: "error",
