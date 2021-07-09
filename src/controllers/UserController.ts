@@ -91,6 +91,20 @@ class UserController {
         }
     }
 
+    getFullNameForUser= async (req: any, res: express.Response) => {
+        try {
+            const {user_id} = req.query
+            const {rows: [{fullname}]} = await DB.query(
+                `select fullname from table_user i where _id=$1`, [user_id])
+            res.json(fullname)
+        } catch (e) {
+            res.status(500).json({
+                status: "error",
+                message: e.message
+            });
+        }
+    }
+
     getMe = async (req: any, res: express.Response) => {
         try {
             const {_id: user_id} = req.user

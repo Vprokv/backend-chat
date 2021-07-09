@@ -21,7 +21,7 @@ const  createRoutes =   (app: express.Express, io: socket.Server) =>{
     app.get("/user/me", UserController.getMe);
     app.get("/user/find", UserController.findUsers);
     app.get("/user/meta", UserController.getUserMeta);
-
+    app.get("/user/", UserController.getFullNameForUser);
 
     app.get("/dialogs", DialogController.getDialog);
     app.get("/dialogs/meta", DialogController.getDialogsMeta);
